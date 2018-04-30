@@ -3,7 +3,7 @@ This is prototype implementation of formatter library based on technique describ
 by Phillip M. Yelland (though the implementation differs from the paper). Given formatting tree, which describes layout variants
 of elements together with their costs, it computes the optimal layout of the whole.
 
-Note that used approach to pretty printing is not particularly fast (see [Performance remarks]),
+Note that used approach to pretty printing is not particularly fast (see [Performance remarks](README.md#performance-remarks)),
 but rather tries to offer features not available elsewhere.
 
 Also note that this library is not well tested, not much optimized and sparsely documented (but sources are self explanatory).
