@@ -24,6 +24,7 @@ module EPrint.Format (
 ) where
 
 import EPrint.Options
+import EPrint.AText
 import EPrint.Layout
 import EPrint.Solution
 import Data.List
@@ -35,7 +36,7 @@ import Debug.Trace
 
 -- The Doc data represents tree of formating instructions and it can also represent partial or complete solution of format.
 data Doc
-    = Text    String
+    = Text    AText
     | TConcat Doc Doc   -- tail concatenation (to last row of vertical concats)
     | HConcat Doc Doc   -- horizontal concatenation (making parallel columns of rows)
     | VConcat Doc Doc   -- vertical concatenation
@@ -49,8 +50,8 @@ pattern Empty = Complete EmptySol
 empty :: Doc
 empty = Empty
 
-text :: String -> Doc
-text s = Text s
+text :: TextLike a => a -> Doc
+text s = Text (AText s)
 
 space = text " "
 tab   = text "    "
@@ -218,7 +219,7 @@ runFmt (F fmt) = Alter $ \opt suffix -> solve opt (fmt opt) suffix
 -------------------------------------
 instance Show Doc where show doc = showDoc Empty doc
 showDoc :: Doc -> Doc -> String
-showDoc _                 (Text s)      = s
+showDoc _                 (Text s)      = tl2str s
 showDoc _             doc@(TConcat a b) = showDoc doc a ++ " + " ++ showDoc doc b
 showDoc _             doc@(HConcat a b) = showDoc doc a ++ " ++ " ++ showDoc doc b
 showDoc (TConcat _ _) doc@(VConcat _ _) = "(" ++ showDoc Empty doc ++ ")"

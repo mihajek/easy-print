@@ -260,8 +260,6 @@ pp $ incCost 0.1 (text "one") <|> text "two"
 
 ## Future development
 Here is a list of planned features:
-- make EPrint generic over text types: String, Text, ByteString (also combination of Text for some documents
-  which need unicode and ByteString for ascii ones make sense in some scenarios)
 - document interface functions using hadoc
 - look at interface of other pretty-printers and add some convenience functions into EPrint.hs
 - create tests for all layout combinations

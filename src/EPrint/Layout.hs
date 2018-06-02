@@ -9,16 +9,15 @@ module EPrint.Layout (
     layWidth, layHeight,
 
     -- layout printing
-    printLayout, printLayoutIO
+    layToATexts
 ) where
 
-import Control.Monad.State
-import Debug.Trace
+import EPrint.AText
 
 -- Optimal layout ready to be printed
 data Layout -- the Int numbers are width and height
     = LGap  !Int  -- white space to separate layout elements or empty branch of layout tree
-    | LText !Int String
+    | LText !Int AText
     | LHCat !Int !Int Layout Layout
     | LVCat !Int !Int Layout Layout
     | LJustify !Position Layout
@@ -40,8 +39,8 @@ layHeight (LJustify _ l)  = layHeight l
 
 layEmpty = LGap 0
 
-layText :: String -> Layout
-layText s = LText (length s) s
+layText :: AText -> Layout
+layText s = LText (tlLength s) s
 
 layH, layV :: Layout -> Layout -> Layout
 layH (LGap i) (LGap j) = LGap (i + j)
@@ -62,40 +61,19 @@ layJustify _ l@(LGap _)       = l
 layJustify p l                = LJustify p l
 
 
-printLayout :: Layout -> String
-printLayout l = loop l where
+layToATexts :: Layout -> [[AText]]
+layToATexts l = loop l where
     loop l = let (hd, tl) = laySplit l
-                 line = evalState (print hd) 0 in
-             case tl of LGap _ -> line
-                        _      -> line ++ ('\n' : loop tl)
+                 line = print hd [] in
+             case tl of LGap _ -> [line]
+                        _      -> line : loop tl
 
-    print :: Layout -> State Int String
-    print (LGap  w)       = do modify $ \g -> g + w
-                               pure ""
-    print (LText _ s)     = do g <- get
-                               put 0
-                               pure $ replicate g ' ' ++ s
-    print (LHCat _ _ a b) = do sa <- print a
-                               sb <- print b
-                               pure $ sa ++ sb
-    print (LJustify _ l)  = print l
-
-printLayoutIO :: Layout -> IO ()
-printLayoutIO l = loop l where
-    loop l = do let (hd, tl) = laySplit l
-                evalStateT (print hd) 0
-                putChar '\n'
-                case tl of LGap _ -> pure ()
-                           _      -> loop tl
-
-    print :: Layout -> StateT Int IO ()
-    print (LGap  w)       = modify $ \g -> g + w
-    print (LText _ s)     = do g <- get
-                               put 0
-                               lift $ putStr $ replicate g ' ' ++ s
-    print (LHCat _ _ a b) = do print a
-                               print b
-    print (LJustify _ l)  = print l
+    print :: Layout -> [AText] -> [AText]
+    print (LGap  w)       []  = []
+    print (LGap  w)       acc = AText (replicate w ' ') : acc
+    print (LText _ s)     acc = s : acc
+    print (LHCat _ _ a b) acc = print a $ print b acc
+    print (LJustify _ l)  acc = print l acc
 
 -- split layout into head line and tail lines, tail is LGap if there is nothing left
 laySplit :: Layout -> (Layout, Layout)
@@ -130,7 +108,7 @@ instance Show Layout where show = showLayout
 showLayout :: Layout -> String
 showLayout l = print (LGap 0) l where
     print _                 (LGap w)    = replicate w '_'
-    print _                 (LText _ s) = s
+    print _                 (LText _ s) = tl2str s
     print _               n@(LHCat _ _ a b) = print n a ++ "+" ++ print n b
     print (LHCat _ _ _ _) n@(LVCat _ _ _ _) = "(" ++ print n n ++ ")"
     print _               n@(LVCat w _ a b) = print n a ++ "$" ++ print n b

@@ -12,6 +12,7 @@ module EPrint.Solution (
 ) where
 
 import EPrint.Options
+import EPrint.AText
 import EPrint.Layout
 import Numeric (showFFloat)
 import Data.List
@@ -96,11 +97,11 @@ solIncCost costInc (Solution ks) = Solution $ map (\k -> k { intercept = interce
 solJustify :: Position -> Solution -> Solution
 solJustify pos (Solution ks) = Solution $ map (\k -> k { layout = layJustify pos (layout k) }) ks
 
-solText :: Options -> String -> Solution
-solText opt s | length s <= lineWidth opt = Solution [Knot      (length s) (layText s) intercept     (costLeftOver opt)]
-              | otherwise                 = Solution [Knot (lineWidth opt) (layText s) interceptOver (costLeftOver opt)]
-              where intercept = fromIntegral (length s) * costChar opt
-                    leftOver = length s - lineWidth opt
+solText :: Options -> AText -> Solution
+solText opt s | tlLength s <= lineWidth opt = Solution [Knot    (tlLength s) (layText s) intercept     (costLeftOver opt)]
+              | otherwise                   = Solution [Knot (lineWidth opt) (layText s) interceptOver (costLeftOver opt)]
+              where intercept = fromIntegral (tlLength s) * costChar opt
+                    leftOver = tlLength s - lineWidth opt
                     interceptOver = intercept + fromIntegral leftOver * costLeftOver opt
 
 -- There are three versions of horizontal concatenation implemented: solCatHSingle, solCatHMulti, solCatHAll

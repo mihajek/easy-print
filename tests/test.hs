@@ -4,6 +4,8 @@ module Main (main) where
 import EPrint
 import Data.List
 import Debug.Trace
+import qualified Data.ByteString.Char8 as BS
+import qualified Data.Text as TS
 
 main = do
     examples
@@ -56,6 +58,11 @@ test2 = do
                                       sh2 <- partial $ wrap [text "1", text "2", text "3"]
                                       pure $ text "x" <+> sh1 <+> sh2 <|> sh1 <+> text "y" <+> sh2
     pprintIO defaultFmt $ wrap [text "1", text "2", text "3"]
+
+test3 :: IO ()
+test3 = do
+    let fmt = defaultFmt { lineWidth = 12 }
+    pprintIO fmt $ text (TS.pack "hello") <+> text (BS.pack "hi") <+> text "bye"
 
 examples :: IO ()
 examples = do
